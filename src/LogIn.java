@@ -26,6 +26,7 @@ public class LogIn extends JFrame {
     private JLabel usernameLabel, passwordLabel;
     private Image logo;
 
+
     /**
      * Constructor to initialize the GUI components.
      */
@@ -136,7 +137,7 @@ public class LogIn extends JFrame {
                 // Login validation
                 if (validateLogin(username, password)) {
                     JOptionPane.showMessageDialog(LogIn.this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    // TODO: Proceed to the main application frame here
+
                     // Open the Home frame and close the current frame
                     SwingUtilities.invokeLater(() -> {
                         new Home();
@@ -147,6 +148,7 @@ public class LogIn extends JFrame {
                 }
             }
         }
+
 
         /**
          * Method to validate log in by checking if the username and password exist in the database.
@@ -176,53 +178,59 @@ public class LogIn extends JFrame {
         }
     }
 
+
     /**
      * Listener for the Sign-Up button.
      * Opens a dialog that allows the user to create a new account.
      */
     private class SignUpListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            // Dialog setup
+            // Create a new dialog for sign-up
             JDialog signUpDialog = new JDialog(LogIn.this, "Sign Up", true);
-            signUpDialog.setLayout(new GridLayout(5, 2, 10, 10));
-            signUpDialog.setSize(300, 250);
+            signUpDialog.setLayout(new GridLayout(6, 2, 10, 10));
+            signUpDialog.setSize(300, 300);
             signUpDialog.setLocationRelativeTo(LogIn.this);
 
-            // Username field and label
+            // Username field
             JTextField newUsernameField = new JTextField(20);
             signUpDialog.add(new JLabel("Username:"));
             signUpDialog.add(newUsernameField);
 
-            // Password field and label
+            // Password field
             JPasswordField newPasswordField = new JPasswordField(20);
             signUpDialog.add(new JLabel("Password:"));
             signUpDialog.add(newPasswordField);
 
-            // Confirm password field and label field
+            // Confirm Password field
             JPasswordField confirmPasswordField = new JPasswordField(20);
             signUpDialog.add(new JLabel("Confirm Password:"));
             signUpDialog.add(confirmPasswordField);
 
-            // Button to choose an avatar
+            // Avatar selection button
             JButton selectAvatarButton = new JButton("Choose Avatar");
             signUpDialog.add(selectAvatarButton);
             JLabel selectedAvatarLabel = new JLabel("No avatar selected");
             signUpDialog.add(selectedAvatarLabel);
 
+            // Avatar image path
             final String[] selectedAvatarPath = {null};
 
+            // Action listener for choosing predefined avatars
             selectAvatarButton.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
+                    // Open a new dialog to choose an avatar
                     JDialog avatarDialog = new JDialog(signUpDialog, "Select Avatar", true);
-                    avatarDialog.setLayout(new GridLayout(3, 3, 10, 10));
+                    avatarDialog.setLayout(new GridLayout(3, 3, 10, 10)); // 3x3 grid for 9 images
                     avatarDialog.setSize(400, 400);
                     avatarDialog.setLocationRelativeTo(signUpDialog);
 
-                    File avatarDir = new File("data/Image/avatar_img");
-                    File[] avatarFiles = avatarDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
+                    // Load avatar images from the data/avatar_img directory
+                    File avatarDir = new File("data/image/avatar_img");
+                    File[] avatarFiles = avatarDir.listFiles((_, name) -> name.toLowerCase().endsWith(".png"));
 
                     if (avatarFiles != null) {
                         for (File avatarFile : avatarFiles) {
+                            // Display the avatar icons
                             ImageIcon avatarIcon = new ImageIcon(avatarFile.getAbsolutePath());
                             Image scaledImage = avatarIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
                             ImageIcon scaledIcon = new ImageIcon(scaledImage);
@@ -232,55 +240,81 @@ public class LogIn extends JFrame {
 
                             avatarLabel.addMouseListener(new MouseAdapter() {
                                 public void mouseClicked(MouseEvent me) {
+                                    // Set the selected avatar path and close the dialog
                                     selectedAvatarPath[0] = avatarFile.getAbsolutePath();
                                     selectedAvatarLabel.setText("Selected: " + avatarFile.getName());
-                                    avatarDialog.dispose();
+                                    avatarDialog.dispose(); // Close the avatar selection dialog
                                 }
                             });
 
                             avatarDialog.add(avatarLabel);
                         }
-                    } else {
-                        JOptionPane.showMessageDialog(signUpDialog, "No avatars found.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
 
-                    avatarDialog.setVisible(true);
+                    avatarDialog.setVisible(true); // Display the avatar selection dialog
                 }
             });
 
+            // Choose Your Own Image button
+            JButton selectOwnImageButton = new JButton("Choose Your Own Image");
+            signUpDialog.add(selectOwnImageButton);
+
+            // Action listener for choosing a custom image
+            selectOwnImageButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    // Use JFileChooser to allow user to select their own image
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setDialogTitle("Select Your Avatar Image");
+                    fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg", "gif"));
+
+                    int userSelection = fileChooser.showOpenDialog(signUpDialog);
+                    if (userSelection == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        selectedAvatarPath[0] = selectedFile.getAbsolutePath(); // Save the selected file path
+                        selectedAvatarLabel.setText("Selected: " + selectedFile.getName()); // Update label to show the selected file
+                    }
+                }
+            });
+
+            // Sign Up Button
             JButton signUpConfirmButton = new JButton("Sign Up");
             signUpDialog.add(signUpConfirmButton);
 
+            // Action listener for the sign-up confirmation button
             signUpConfirmButton.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     String newUsername = newUsernameField.getText();
                     String newPassword = new String(newPasswordField.getPassword());
                     String confirmPassword = new String(confirmPasswordField.getPassword());
 
+                    // Check for empty fields
                     if (newUsername.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
                         JOptionPane.showMessageDialog(signUpDialog, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
                     } else if (!newPassword.equals(confirmPassword)) {
                         JOptionPane.showMessageDialog(signUpDialog, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
                     } else {
+                        // Insert the new user into the database
                         if (insertUser(newUsername, newPassword, selectedAvatarPath[0])) {
-                            JOptionPane.showMessageDialog(signUpDialog, "Sign up successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                            signUpDialog.dispose();
+                            JOptionPane.showMessageDialog(signUpDialog, "Account created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                            signUpDialog.dispose(); // Close the sign-up dialog
                         } else {
-                            JOptionPane.showMessageDialog(signUpDialog, "Sign up failed. Username may already be taken.", "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(signUpDialog, "User already exists.", "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
             });
 
+            // Add all components to the dialog and display it
             signUpDialog.setVisible(true);
         }
 
+
         /**
-         * Method to insert a new user into the database
-         * @param username: String for the new username
-         * @param password: String for the new password
-         * @param avatarPath: Path to the selected avatar image
-         * @return boolean: true if insertion was successful, false otherwise
+         * Method to insert a new user into the database.
+         * @param username: String for the new username.
+         * @param password: String for the new password.
+         * @param avatarPath: Path to the selected avatar image.
+         * @return boolean: true if insertion was successful, false otherwise.
          */
         private boolean insertUser(String username, String password, String avatarPath) {
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -292,15 +326,16 @@ public class LogIn extends JFrame {
                     preparedStatement.setString(3, avatarPath);
 
                     int rowsAffected = preparedStatement.executeUpdate();
-                    return rowsAffected > 0;
+                    return rowsAffected > 0; // Return true if user was inserted
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(LogIn.this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
-            return false;
+            return false; // Return false if insertion failed
         }
     }
+
 
     /**
      * Main method to open the Log In frame
