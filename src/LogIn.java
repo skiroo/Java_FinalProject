@@ -2,6 +2,7 @@
  * Libraries
  */
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
@@ -39,7 +40,7 @@ public class LogIn extends JFrame {
 
         // Frame setup
         setTitle("Log In");
-        setSize(500, 500);
+        setSize(500, 400);
         setLocationRelativeTo(null);
         setIconImage(logo);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -143,6 +144,7 @@ public class LogIn extends JFrame {
                         new Home();
                         LogIn.this.dispose(); // Close the current LogIn
                     });
+
                 } else {
                     JOptionPane.showMessageDialog(LogIn.this, "Invalid username or password.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -187,30 +189,37 @@ public class LogIn extends JFrame {
         public void actionPerformed(ActionEvent e) {
             // Create a new dialog for sign-up
             JDialog signUpDialog = new JDialog(LogIn.this, "Sign Up", true);
-            signUpDialog.setLayout(new GridLayout(6, 2, 10, 10));
-            signUpDialog.setSize(300, 300);
+            signUpDialog.setLayout(new BorderLayout());
+            signUpDialog.setSize(400, 300);
             signUpDialog.setLocationRelativeTo(LogIn.this);
+
+            // Create a panel with padding
+            JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
+            panel.setBorder(new EmptyBorder(10, 10, 10, 10)); // Add padding to the panel
 
             // Username field
             JTextField newUsernameField = new JTextField(20);
-            signUpDialog.add(new JLabel("Username:"));
-            signUpDialog.add(newUsernameField);
+            panel.add(new JLabel("Username:"));
+            panel.add(newUsernameField);
 
             // Password field
             JPasswordField newPasswordField = new JPasswordField(20);
-            signUpDialog.add(new JLabel("Password:"));
-            signUpDialog.add(newPasswordField);
+            panel.add(new JLabel("Password:"));
+            panel.add(newPasswordField);
 
             // Confirm Password field
             JPasswordField confirmPasswordField = new JPasswordField(20);
-            signUpDialog.add(new JLabel("Confirm Password:"));
-            signUpDialog.add(confirmPasswordField);
+            panel.add(new JLabel("Confirm Password:"));
+            panel.add(confirmPasswordField);
 
             // Avatar selection button
             JButton selectAvatarButton = new JButton("Choose Avatar");
-            signUpDialog.add(selectAvatarButton);
+            panel.add(selectAvatarButton);
             JLabel selectedAvatarLabel = new JLabel("No avatar selected");
-            signUpDialog.add(selectedAvatarLabel);
+            panel.add(selectedAvatarLabel);
+
+            // Set padding for the label
+            selectedAvatarLabel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
             // Avatar image path
             final String[] selectedAvatarPath = {null};
@@ -236,6 +245,7 @@ public class LogIn extends JFrame {
                             ImageIcon scaledIcon = new ImageIcon(scaledImage);
                             JLabel avatarLabel = new JLabel(scaledIcon);
                             avatarLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                            avatarLabel.setBorder(new EmptyBorder(5, 5, 5, 5)); // Add padding for avatar label
                             avatarLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
                             avatarLabel.addMouseListener(new MouseAdapter() {
@@ -257,7 +267,7 @@ public class LogIn extends JFrame {
 
             // Choose Your Own Image button
             JButton selectOwnImageButton = new JButton("Choose Your Own Image");
-            signUpDialog.add(selectOwnImageButton);
+            panel.add(selectOwnImageButton);
 
             // Action listener for choosing a custom image
             selectOwnImageButton.addActionListener(new ActionListener() {
@@ -278,7 +288,7 @@ public class LogIn extends JFrame {
 
             // Sign Up Button
             JButton signUpConfirmButton = new JButton("Sign Up");
-            signUpDialog.add(signUpConfirmButton);
+            panel.add(signUpConfirmButton);
 
             // Action listener for the sign-up confirmation button
             signUpConfirmButton.addActionListener(new ActionListener() {
@@ -290,8 +300,10 @@ public class LogIn extends JFrame {
                     // Check for empty fields
                     if (newUsername.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
                         JOptionPane.showMessageDialog(signUpDialog, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+
                     } else if (!newPassword.equals(confirmPassword)) {
                         JOptionPane.showMessageDialog(signUpDialog, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+
                     } else {
                         // Insert the new user into the database
                         if (insertUser(newUsername, newPassword, selectedAvatarPath[0])) {
@@ -304,7 +316,10 @@ public class LogIn extends JFrame {
                 }
             });
 
-            // Add all components to the dialog and display it
+            // Add the panel to the dialog
+            signUpDialog.add(panel, BorderLayout.CENTER);
+
+            // Display the dialog
             signUpDialog.setVisible(true);
         }
 
