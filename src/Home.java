@@ -135,7 +135,7 @@ public class Home extends JFrame {
         // Add mouse listener to detect double-clicks
         groupTable.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+                if (e.getClickCount() == 2) {  // Check for double-click
                     int row = groupTable.getSelectedRow();
                     if (row != -1) {
                         int groupId = (int) tableModel.getValueAt(row, 0);  // Get group ID from the selected row
