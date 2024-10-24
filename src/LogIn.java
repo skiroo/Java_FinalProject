@@ -8,15 +8,14 @@ import java.awt.event.*;
 import java.sql.*;
 import java.io.*;
 
-
 /**
  * LogIn represents the user interface for logging in to the Household Expense Manager Application.
  * It allows users to log in to their existing accounts or create new accounts if they do not have one.
  */
 public class LogIn extends JFrame {
 
-    // Database connection parameters
-    private static String DB_URL = "jdbc:mariadb://localhost:3307";
+    // Database connection parameters (base URL without the database)
+    private static final String DB_URL = "jdbc:mariadb://localhost:3307";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "vj88nx35&*";
 
@@ -28,12 +27,11 @@ public class LogIn extends JFrame {
     // Set frame icon to application logo
     private static Image app_logo = Toolkit.getDefaultToolkit().getImage("data/image/logo.png");
 
-
     /**
      * Constructor to initialize the GUI components.
      */
     public LogIn() {
-        DB_URL = DB_URL + createDatabaseIfNotExists();  // Update DB_URL once the database is created
+        createDatabaseIfNotExists();  // Create the database if it does not exist
         createTableIfNotExists();   // Create the table if it does not exist
 
         // Frame setup
@@ -109,45 +107,37 @@ public class LogIn extends JFrame {
         setVisible(true);
     }
 
-
     /**
-     * Method to create the database 'users_db' if it does not already exist.
-     *
-     * @return String representing the path to the database, which is used to update the DB_URL.
+     * Method to create the database 'homex_db' if it does not already exist.
      */
-    private static String createDatabaseIfNotExists() {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER,DB_PASSWORD);
+    private static void createDatabaseIfNotExists() {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
             // Create the database if it does not exist
-            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS users_db");
+            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS homex_db");
 
         } catch (SQLException e) {
             System.out.println("SQL Exception: " + e.getMessage());
         }
-
-        return "/users_db";
     }
 
-
     /**
-     * Method to create the 'user' table within the database if it does not already exist.
-     * This table is used to store user account information.
+     * Method to create the 'users' table within the database if it does not already exist.
      */
     private static void createTableIfNotExists() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
-            // Use the database
-            statement.executeUpdate("USE users_db");
+            // Switch to the 'homex_db' database dynamically
+            statement.executeUpdate("USE homex_db");
 
-            // Create the employees table if it does not exist
+            // Create the user's table if it does not exist
             String createTableSQL = "CREATE TABLE IF NOT EXISTS users (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "username VARCHAR(255) UNIQUE, " +
                     "password VARCHAR(255), " +
                     "avatar VARCHAR(255))";
-
             statement.executeUpdate(createTableSQL);
 
         } catch (SQLException e) {
@@ -155,11 +145,9 @@ public class LogIn extends JFrame {
         }
     }
 
-
     /**
      * Listener for the Log In button.
      * Handles user log in by checking if the username and password are in the database.
-     * If the log in is successful, it proceeds to the main application frame.
      */
     private class LogInListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -183,7 +171,7 @@ public class LogIn extends JFrame {
 
                     // Open the Home page and close the current frame
                     SwingUtilities.invokeLater(() -> {
-                        new Home(User.getUsername(), User.getAvatarPath());
+                        new Home();  // Use User class to fetch username and avatar
                         LogIn.this.dispose(); // Close the current LogIn
                     });
                 } else {
@@ -194,12 +182,18 @@ public class LogIn extends JFrame {
 
         /**
          * Method to get the path of the avatar image
+         *
          * @param username:
-         * @return The
+         * @return The avatar path.
          */
         private String getAvatarPath(String username) {
             String avatarPath = "data/image/default_avatar.png"; // Default avatar path
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+
+                // Switch to 'homex_db' database
+                Statement statement = connection.createStatement();
+                statement.executeUpdate("USE homex_db");
+
                 String sql = "SELECT avatar FROM users WHERE username = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setString(1, username);
@@ -219,15 +213,19 @@ public class LogIn extends JFrame {
             return avatarPath;
         }
 
-
         /**
          * Method to validate log in by checking if the username and password exist in the database.
+         *
          * @param username: String of username.
          * @param password: String of password.
-         * @return boolean indicating if user exits in the database.
+         * @return boolean indicating if the user exists in the database.
          */
         private boolean validateLogin(String username, String password) {
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+
+                // Switch to 'homex_db' database
+                Statement statement = connection.createStatement();
+                statement.executeUpdate("USE homex_db");
 
                 String sql = "SELECT password FROM users WHERE username = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -429,6 +427,10 @@ public class LogIn extends JFrame {
          */
         private boolean insertUser(String username, String password, String avatarPath) {
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+                // Switch to 'homex_db' database
+                Statement statement = connection.createStatement();
+                statement.executeUpdate("USE homex_db");
+
                 String sql = "INSERT INTO users (username, password, avatar) VALUES (?, ?, ?)";
 
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
