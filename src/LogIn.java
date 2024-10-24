@@ -9,7 +9,7 @@ import java.sql.*;
 import java.io.*;
 
 /**
- * LogIn represents the user interface for logging in to the Household Expense Manager Application.
+ * LogIn represents the user interface for logging in to the HomeEx Application.
  * It allows users to log in to their existing accounts or create new accounts if they do not have one.
  */
 public class LogIn extends JFrame {
@@ -26,6 +26,7 @@ public class LogIn extends JFrame {
     private JLabel usernameLabel, passwordLabel;
     // Set frame icon to application logo
     private static Image app_logo = Toolkit.getDefaultToolkit().getImage("data/image/logo.png");
+
 
     /**
      * Constructor to initialize the GUI components.
@@ -107,6 +108,7 @@ public class LogIn extends JFrame {
         setVisible(true);
     }
 
+
     /**
      * Method to create the database 'homex_db' if it does not already exist.
      */
@@ -121,6 +123,7 @@ public class LogIn extends JFrame {
             System.out.println("SQL Exception: " + e.getMessage());
         }
     }
+
 
     /**
      * Method to create the 'users' table within the database if it does not already exist.
@@ -144,6 +147,7 @@ public class LogIn extends JFrame {
             System.out.println("SQL Exception: " + e.getMessage());
         }
     }
+
 
     /**
      * Listener for the Log In button.
