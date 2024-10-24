@@ -157,15 +157,6 @@ public class LogIn extends JFrame {
 
 
     /**
-     * Class to validate the password during the sign up process
-     */
-    private static class PasswordValidator {
-
-
-    }
-
-
-    /**
      * Listener for the Log In button.
      * Handles user log in by checking if the username and password are in the database.
      * If the log in is successful, it proceeds to the main application frame.
@@ -379,13 +370,22 @@ public class LogIn extends JFrame {
                     String newUsername = newUsernameField.getText();
                     String newPassword = new String(newPasswordField.getPassword());
                     String confirmPassword = new String(confirmPasswordField.getPassword());
+                    if (!isValidPassword(newPassword)) {
+                        JOptionPane.showMessageDialog(LogIn.this,
+                                "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, and one digit.",
+                                "Invalid Password",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
 
                     // Check for empty fields
                     if (newUsername.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
                         JOptionPane.showMessageDialog(signUpDialog, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
 
                     } else if (!newPassword.equals(confirmPassword)) {
                         JOptionPane.showMessageDialog(signUpDialog, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
 
                     } else {
                         // Insert the new user into the database
@@ -404,6 +404,19 @@ public class LogIn extends JFrame {
 
             // Display the dialog
             signUpDialog.setVisible(true);
+        }
+
+
+        /**
+         * Validates the password according to specified rules.
+         *
+         * @param password The password to validate.
+         * @return True if the password meets the criteria, false otherwise.
+         */
+        public static boolean isValidPassword(String password) {
+            // Check if the password meets the required criteria
+            String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?!.*\\s).{8,}$";
+            return password.matches(regex);
         }
 
 
