@@ -25,46 +25,81 @@ public class LogIn extends JFrame {
     private JTextField usernameTextField;
     private JPasswordField passwordTextField;
     private JLabel usernameLabel, passwordLabel;
-    private Image logo;
+    // Set frame icon to application logo
+    private static Image app_logo = Toolkit.getDefaultToolkit().getImage("data/image/logo.png");
 
 
     /**
      * Constructor to initialize the GUI components.
      */
     public LogIn() {
-        DB_URL = DB_URL + createDatabaseIfNotExists();  // Update DB_URL the once database is created
+        DB_URL = DB_URL + createDatabaseIfNotExists();  // Update DB_URL once the database is created
         createTableIfNotExists();   // Create the table if it does not exist
-
-        // Set frame icon to application logo
-        logo = Toolkit.getDefaultToolkit().getImage("data/logo.png");
 
         // Frame setup
         setTitle("Log In");
         setSize(500, 400);
         setLocationRelativeTo(null);
-        setIconImage(logo);
+        setIconImage(app_logo);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new FlowLayout());
+
+        // Set up layout
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        // Logo
+        ImageIcon originalLogo = new ImageIcon("data/image/logo.png");
+        Image scaledLogo = originalLogo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH); // Adjust width and height as needed
+        JLabel logoLabel = new JLabel(new ImageIcon(scaledLogo));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(logoLabel, gbc);
 
         // Username label and text field
         usernameLabel = new JLabel("Username:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        add(usernameLabel, gbc);
+
         usernameTextField = new JTextField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        add(usernameTextField, gbc);
 
         // Password label and text field
         passwordLabel = new JLabel("Password:");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        add(passwordLabel, gbc);
+
         passwordTextField = new JPasswordField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        add(passwordTextField, gbc);
 
         // Log in and sign up buttons
         logInButton = new JButton("Log In");
-        signUpButton = new JButton("Sign Up");
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        add(logInButton, gbc);
 
-        // Add components to the frame
-        add(usernameLabel);
-        add(usernameTextField);
-        add(passwordLabel);
-        add(passwordTextField);
-        add(logInButton);
-        add(signUpButton);
+        signUpButton = new JButton("Sign Up");
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(0, 135, 0, 0);
+        gbc.anchor = GridBagConstraints.WEST;
+        add(signUpButton, gbc);
 
         // Button events
         logInButton.addActionListener(new LogInListener());
@@ -77,6 +112,7 @@ public class LogIn extends JFrame {
 
     /**
      * Method to create the database 'users_db' if it does not already exist.
+     *
      * @return String representing the path to the database, which is used to update the DB_URL.
      */
     private static String createDatabaseIfNotExists() {
@@ -121,6 +157,15 @@ public class LogIn extends JFrame {
 
 
     /**
+     * Class to validate the password during the sign up process
+     */
+    private static class PasswordValidator {
+
+
+    }
+
+
+    /**
      * Listener for the Log In button.
      * Handles user log in by checking if the username and password are in the database.
      * If the log in is successful, it proceeds to the main application frame.
@@ -139,16 +184,48 @@ public class LogIn extends JFrame {
                 if (validateLogin(username, password)) {
                     JOptionPane.showMessageDialog(LogIn.this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
 
-                    // Open the Home frame and close the current frame
+                    // Get the avatar path of the logged-in user
+                    String avatarPath = getAvatarPath(username);
+
+                    // Save user information for access in other classes
+                    User.setUser(username, avatarPath);
+
+                    // Open the Home page and close the current frame
                     SwingUtilities.invokeLater(() -> {
-                        new Home();
+                        new Home(User.getUsername(), User.getAvatarPath());
                         LogIn.this.dispose(); // Close the current LogIn
                     });
-
                 } else {
                     JOptionPane.showMessageDialog(LogIn.this, "Invalid username or password.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
+        }
+
+        /**
+         * Method to get the path of the avatar image
+         * @param username:
+         * @return The
+         */
+        private String getAvatarPath(String username) {
+            String avatarPath = "data/image/default_avatar.png"; // Default avatar path
+            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+                String sql = "SELECT avatar FROM users WHERE username = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                preparedStatement.setString(1, username);
+
+                ResultSet result = preparedStatement.executeQuery();
+
+                if (result.next()) {
+                    avatarPath = result.getString("avatar");
+                    if (avatarPath == null || avatarPath.isEmpty()) {
+                        avatarPath = "data/image/default_avatar.png"; // Use default avatar if none is set
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(LogIn.this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            return avatarPath;
         }
 
 
@@ -262,6 +339,12 @@ public class LogIn extends JFrame {
                     }
 
                     avatarDialog.setVisible(true); // Display the avatar selection dialog
+
+                    // After the dialog is closed, check if an avatar was selected
+                    if (selectedAvatarPath[0] == null || selectedAvatarPath[0].isEmpty()) {
+                        selectedAvatarPath[0] = "data/image/default_avatar.png"; // Set to default avatar if none is selected
+                        selectedAvatarLabel.setText("Selected: Default Avatar"); // Update label to indicate the default avatar
+                    }
                 }
             });
 
