@@ -1,12 +1,9 @@
-/**
- * Libraires
- */
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 
 public class Home extends JFrame {
 
@@ -71,14 +68,6 @@ public class Home extends JFrame {
             avatarLabel.setForeground(Color.WHITE);
         }
 
-        // Add mouse listener to avatar label to open profile page and close home
-        avatarLabel.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                new Profile(); // Open profile page
-                dispose(); // Close the home frame
-            }
-        });
-
         userInfoPanel.add(usernameLabel);
         userInfoPanel.add(avatarLabel);
         headerPanel.add(userInfoPanel, BorderLayout.EAST);
@@ -129,7 +118,7 @@ public class Home extends JFrame {
         add(centerPanel, BorderLayout.CENTER);
 
         // Create a non-editable table to display groups
-        tableModel = new DefaultTableModel(new String[]{"Group Name"}, 0) {
+        tableModel = new DefaultTableModel(new String[]{"Group ID", "Group Name"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Make all cells non-editable
@@ -137,6 +126,26 @@ public class Home extends JFrame {
         };
         groupTable = new JTable(tableModel);
         groupTable.setDefaultRenderer(Object.class, new StripedTableCellRenderer());  // Apply striped rendering
+
+        // Hide the "Group ID" column from the user
+        groupTable.getColumnModel().getColumn(0).setMinWidth(0);
+        groupTable.getColumnModel().getColumn(0).setMaxWidth(0);
+        groupTable.getColumnModel().getColumn(0).setPreferredWidth(0);
+
+        // Add mouse listener to detect double-clicks
+        groupTable.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = groupTable.getSelectedRow();
+                    if (row != -1) {
+                        int groupId = (int) tableModel.getValueAt(row, 0);  // Get group ID from the selected row
+                        new Group(groupId);  // Call new Group with the group ID
+                        dispose();  // Close the home frame
+                    }
+                }
+            }
+        });
+
         loadExpenseGroups(); // Load and display groups in the table
 
         // Add table to scroll pane
@@ -158,7 +167,7 @@ public class Home extends JFrame {
     }
 
     /**
-     * Color alternate rows in the table.
+     * Custom renderer to color alternate rows in the table.
      */
     private static class StripedTableCellRenderer extends DefaultTableCellRenderer {
         @Override
@@ -167,12 +176,12 @@ public class Home extends JFrame {
 
             if (!isSelected) {
                 if (row % 2 == 0) {
-                    c.setBackground(new Color(0, 250, 200, 255));  // Light gray for even rows
+                    c.setBackground(new Color(0, 250, 200));
                 } else {
                     c.setBackground(Color.WHITE);  // White for odd rows
                 }
             } else {
-                c.setBackground(table.getSelectionBackground());  // Keep the default background when selected
+                c.setBackground(table.getSelectionBackground());
             }
 
             return c;
@@ -206,15 +215,16 @@ public class Home extends JFrame {
      */
     private void loadExpenseGroups() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT groupname FROM groups";  // Modify this query to filter by user if needed
+            String sql = "SELECT id, groupname FROM groups";  // Fetch both the group ID and group name
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             tableModel.setRowCount(0);  // Clear existing rows
 
             while (resultSet.next()) {
+                int groupId = resultSet.getInt("id");
                 String groupName = resultSet.getString("groupname");
-                tableModel.addRow(new Object[]{groupName});
+                tableModel.addRow(new Object[]{groupId, groupName});  // Add both group ID and group name
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
