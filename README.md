@@ -11,8 +11,6 @@
 5. [Usage Instructions](#usage-instructions)
 6. [Database Structure](#database-structure)
 7. [Class Descriptions](#class-descriptions)
-8. [Contributing](#contributing)
-9. [License](#license)
 
 ## Project Overview
 HomEx (Household Expense Manager) is a Java Swing-based application designed to help users manage household expenses effectively. With HomEx, multiple household members can log in, track expenses, create expense groups, and analyze financial data to stay organized and avoid going over budget.
