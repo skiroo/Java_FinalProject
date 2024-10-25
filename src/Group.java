@@ -208,7 +208,7 @@ public class Group extends JFrame {
                 if (column == 2) { // Assuming column 2 is the "Amount" column
                     double amount = Double.parseDouble(value.toString());
                     if (amount >= 0) {
-                        c.setForeground(new Color(157, 253, 111));  // Gain
+                        c.setForeground(new Color(76, 250, 0));  // Gain
                     } else {
                         c.setForeground(new Color(255, 82, 82));  // Loss
                     }
@@ -285,79 +285,106 @@ public class Group extends JFrame {
      */
     private void openAddExpenseDialog(int groupId) {
         JDialog addExpenseDialog = new JDialog(this, "Add Expense", true);
-        addExpenseDialog.setLayout(new GridLayout(4, 2, 10, 10));
-        addExpenseDialog.setSize(400, 200);
-        addExpenseDialog.setLocationRelativeTo(this);
+        addExpenseDialog.setLayout(new GridBagLayout());  // Use GridBagLayout for better control over the layout
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);  // Add padding between components
+        gbc.fill = GridBagConstraints.HORIZONTAL;  // Make components fill horizontally
 
         // Expense name field
-        JTextField expenseNameField = new JTextField();
-        addExpenseDialog.add(new JLabel("Expense Name:"));
-        addExpenseDialog.add(expenseNameField);
+        gbc.gridx = 0;  // First column
+        gbc.gridy = 0;  // First row
+        addExpenseDialog.add(new JLabel("Expense Name:"), gbc);
+
+        gbc.gridx = 1;  // Second column
+        JTextField expenseNameField = new JTextField(15);
+        addExpenseDialog.add(expenseNameField, gbc);
 
         // Amount field
-        JTextField amountField = new JTextField();
-        addExpenseDialog.add(new JLabel("Amount:"));
-        addExpenseDialog.add(amountField);
+        gbc.gridx = 0;  // First column
+        gbc.gridy = 1;  // Second row
+        addExpenseDialog.add(new JLabel("Amount:"), gbc);
+
+        gbc.gridx = 1;  // Second column
+        JTextField amountField = new JTextField(15);
+        addExpenseDialog.add(amountField, gbc);
 
         // Gain or Loss option (radio buttons)
+        gbc.gridx = 0;  // First column
+        gbc.gridy = 2;  // Third row
+        addExpenseDialog.add(new JLabel("Gain or Loss:"), gbc);
+
+        gbc.gridx = 1;  // Second column
         JRadioButton gainRadioButton = new JRadioButton("Gain");
         JRadioButton lossRadioButton = new JRadioButton("Loss");
         ButtonGroup group = new ButtonGroup();
         group.add(gainRadioButton);
         group.add(lossRadioButton);
-        JPanel gainLossPanel = new JPanel(new FlowLayout());
+
+        JPanel gainLossPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));  // Group radio buttons in a panel
         gainLossPanel.add(gainRadioButton);
         gainLossPanel.add(lossRadioButton);
-        addExpenseDialog.add(new JLabel("Gain or Loss:"));
-        addExpenseDialog.add(gainLossPanel);
+        addExpenseDialog.add(gainLossPanel, gbc);
 
         // Date field
-        JTextField dateField = new JTextField();
-        addExpenseDialog.add(new JLabel("Date (YYYY-MM-DD):"));
-        addExpenseDialog.add(dateField);
+        gbc.gridx = 0;  // First column
+        gbc.gridy = 3;  // Fourth row
+        addExpenseDialog.add(new JLabel("Date (YYYY-MM-DD):"), gbc);
+
+        gbc.gridx = 1;  // Second column
+        JTextField dateField = new JTextField(15);
+        addExpenseDialog.add(dateField, gbc);
 
         // Add button
+        gbc.gridx = 0;
+        gbc.gridy = 4;  // Fifth row
+        gbc.gridwidth = 2;  // Span across two columns
+        gbc.anchor = GridBagConstraints.CENTER;
         JButton addButton = new JButton("Add");
+        addExpenseDialog.add(addButton, gbc);
+
+        // Action listener for the Add button
         addButton.addActionListener(_ -> {
             String expenseName = expenseNameField.getText();
             String amountStr = amountField.getText();
             String date = dateField.getText();
 
-            // Ensure amount is a valid number
+            // Validate that amount is a number
             try {
-                Double.parseDouble(amountStr); // Try to parse amount
+                Double.parseDouble(amountStr);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Amount must be a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
-                return; // Exit if the amount is not valid
+                return;
             }
 
-            // Check if gain or loss is selected and adjust the amount
+            // Determine if it is a gain or loss
             if (lossRadioButton.isSelected()) {
-                amountStr = "-" + amountStr;
+                amountStr = "-" + amountStr;  // Prepend minus sign for loss
             }
 
-            // Insert the expense into the database with the username
             if (!expenseName.isEmpty() && !amountStr.isEmpty() && !date.isEmpty()) {
+                // Add the expense to the database with the username
                 addExpenseToDatabase(groupId, expenseName, amountStr, date, User.getUsername());
-                addExpenseDialog.dispose();
-                loadExpenses(groupId); // Refresh the displayed expenses
+                addExpenseDialog.dispose();  // Close the dialog
+                loadExpenses(groupId);  // Refresh the displayed expenses
             } else {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-        addExpenseDialog.add(addButton);
 
+        // Display the dialog
+        addExpenseDialog.pack();  // Adjust dialog size based on components
+        addExpenseDialog.setLocationRelativeTo(this);  // Center the dialog
         addExpenseDialog.setVisible(true);
     }
 
 
     /**
      *
-     * @param groupId
-     * @param expenseName
-     * @param amount
-     * @param date
-     * @param username
+     * @param groupId:
+     * @param expenseName:
+     * @param amount:
+     * @param date:
+     * @param username:
      */
     private void addExpenseToDatabase(int groupId, String expenseName, String amount, String date, String username) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -387,19 +414,35 @@ public class Group extends JFrame {
      */
     private void openEditExpenseDialog(int expenseId, String currentName, String currentAmount, String currentDate) {
         JDialog editExpenseDialog = new JDialog(this, "Edit Expense", true);
-        editExpenseDialog.setLayout(new GridLayout(4, 2, 10, 10));
-        editExpenseDialog.setSize(400, 200);
-        editExpenseDialog.setLocationRelativeTo(this);
+        editExpenseDialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Fields pre-filled with current values
-        JTextField expenseNameField = new JTextField(currentName);
-        editExpenseDialog.add(new JLabel("Expense Name:"));
-        editExpenseDialog.add(expenseNameField);
+        // Expense name field
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        editExpenseDialog.add(new JLabel("Expense Name:"), gbc);
 
-        JTextField amountField = new JTextField(currentAmount);
-        editExpenseDialog.add(new JLabel("Amount:"));
-        editExpenseDialog.add(amountField);
+        gbc.gridx = 1;
+        JTextField expenseNameField = new JTextField(currentName, 15);
+        editExpenseDialog.add(expenseNameField, gbc);
 
+        // Amount field
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        editExpenseDialog.add(new JLabel("Amount:"), gbc);
+
+        gbc.gridx = 1;
+        JTextField amountField = new JTextField(currentAmount, 15);
+        editExpenseDialog.add(amountField, gbc);
+
+        // Gain or Loss option
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        editExpenseDialog.add(new JLabel("Gain or Loss:"), gbc);
+
+        gbc.gridx = 1;
         JRadioButton gainRadioButton = new JRadioButton("Gain");
         JRadioButton lossRadioButton = new JRadioButton("Loss");
         if (Double.parseDouble(currentAmount) < 0) {
@@ -410,18 +453,29 @@ public class Group extends JFrame {
         ButtonGroup group = new ButtonGroup();
         group.add(gainRadioButton);
         group.add(lossRadioButton);
-        JPanel gainLossPanel = new JPanel(new FlowLayout());
+
+        JPanel gainLossPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         gainLossPanel.add(gainRadioButton);
         gainLossPanel.add(lossRadioButton);
-        editExpenseDialog.add(new JLabel("Gain or Loss:"));
-        editExpenseDialog.add(gainLossPanel);
+        editExpenseDialog.add(gainLossPanel, gbc);
 
-        JTextField dateField = new JTextField(currentDate);
-        editExpenseDialog.add(new JLabel("Date (YYYY-MM-DD):"));
-        editExpenseDialog.add(dateField);
+        // Date field
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        editExpenseDialog.add(new JLabel("Date (YYYY-MM-DD):"), gbc);
+
+        gbc.gridx = 1;
+        JTextField dateField = new JTextField(currentDate, 15);
+        editExpenseDialog.add(dateField, gbc);
 
         // Update button
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
         JButton updateButton = new JButton("Update");
+        editExpenseDialog.add(updateButton, gbc);
+
         updateButton.addActionListener(_ -> {
             String newName = expenseNameField.getText();
             String newAmount = amountField.getText();
@@ -435,23 +489,24 @@ public class Group extends JFrame {
                 }
                 updateExpenseInDatabase(expenseId, newName, newAmount, newDate);
                 editExpenseDialog.dispose();
-                loadExpenses(groupId); // Refresh displayed expenses
+                loadExpenses(groupId);  // Refresh displayed expenses
             } else {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-        editExpenseDialog.add(updateButton);
 
+        editExpenseDialog.pack();
+        editExpenseDialog.setLocationRelativeTo(this);
         editExpenseDialog.setVisible(true);
     }
 
 
     /**
      *
-     * @param expenseId
-     * @param newName
-     * @param newAmount
-     * @param newDate
+     * @param expenseId:
+     * @param newName:
+     * @param newAmount:
+     * @param newDate:
      */
     private void updateExpenseInDatabase(int expenseId, String newName, String newAmount, String newDate) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -472,10 +527,15 @@ public class Group extends JFrame {
      * Opens a dialog to confirm removing an expense.
      */
     private void openRemoveExpenseDialog(int expenseId) {
-        int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove this expense?", "Confirm Removal", JOptionPane.YES_NO_OPTION);
+        int response = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to remove this expense?",
+                "Confirm Removal",
+                JOptionPane.YES_NO_OPTION
+        );
         if (response == JOptionPane.YES_OPTION) {
             removeExpenseFromDatabase(expenseId);
-            loadExpenses(groupId); // Refresh the displayed expenses
+            loadExpenses(groupId);  // Refresh the displayed expenses
         }
     }
 
