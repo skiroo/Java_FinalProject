@@ -21,8 +21,9 @@ public class Home extends JFrame {
     DefaultTableModel tableModel;
 
     public Home() {
-        // Create the groups table if it does not exist
-        createTableIfNotExists();
+        // Create the groups and members table if it does not exist
+        createGroupsTableIfNotExists();
+        createMembersTableIfNotExists();
 
         // Frame setup
         setTitle("Home");
@@ -166,6 +167,7 @@ public class Home extends JFrame {
         setVisible(true);
     }
 
+
     /**
      * Custom renderer to color alternate rows in the table.
      */
@@ -188,10 +190,11 @@ public class Home extends JFrame {
         }
     }
 
+
     /**
      * Method to create the 'groups' table within the database if it does not already exist.
      */
-    private static void createTableIfNotExists() {
+    private static void createGroupsTableIfNotExists() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              Statement statement = connection.createStatement()) {
 
@@ -210,13 +213,53 @@ public class Home extends JFrame {
         }
     }
 
+
+    /**
+     * Method to create the 'members' table within the database if it does not already exist.
+     */
+    private static void createMembersTableIfNotExists() {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement statement = connection.createStatement()) {
+
+            // Switch to the 'homex_db' database
+            statement.executeUpdate("USE homex_db");
+
+            // Create the members table if it does not exist
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS members (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "user_id INT, " +
+                    "group_id INT, " +
+                    "FOREIGN KEY (user_id) REFERENCES users(id), " +
+                    "FOREIGN KEY (group_id) REFERENCES groups(id))";
+            statement.executeUpdate(createTableSQL);
+
+        } catch (SQLException e) {
+            System.out.println("SQL Exception: " + e.getMessage());
+        }
+    }
+    
+
     /**
      * Loads the user's expense groups from the database and displays them in the groupTable.
      */
     private void loadExpenseGroups() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT id, groupname FROM groups";  // Fetch both the group ID and group name
+            // Get the logged-in user's ID from the `users` table
+            String sqlUserId = "SELECT id FROM users WHERE username = ?";
+            PreparedStatement userIdStmt = connection.prepareStatement(sqlUserId);
+            userIdStmt.setString(1, User.getUsername());
+            ResultSet userIdResultSet = userIdStmt.executeQuery();
+            int userId = -1;
+            if (userIdResultSet.next()) {
+                userId = userIdResultSet.getInt("id");
+            }
+
+            // Now fetch only the groups this user has joined
+            String sql = "SELECT groups.id, groups.groupname FROM groups " +
+                    "JOIN members ON groups.id = members.group_id " +
+                    "WHERE members.user_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, userId);  // Pass the user ID to the query
             ResultSet resultSet = preparedStatement.executeQuery();
 
             tableModel.setRowCount(0);  // Clear existing rows
@@ -224,13 +267,14 @@ public class Home extends JFrame {
             while (resultSet.next()) {
                 int groupId = resultSet.getInt("id");
                 String groupName = resultSet.getString("groupname");
-                tableModel.addRow(new Object[]{groupId, groupName});  // Add both group ID and group name
+                tableModel.addRow(new Object[]{groupId, groupName});  // Add the group data
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
     }
 
+    
     /**
      * Opens a dialog to create a new expense group.
      */
@@ -269,6 +313,7 @@ public class Home extends JFrame {
         createGroupDialog.setVisible(true);
     }
 
+
     /**
      * Creates a new expense group in the database.
      */
@@ -283,6 +328,7 @@ public class Home extends JFrame {
             ex.printStackTrace();
         }
     }
+
 
     /**
      * Opens a dialog to join an existing group.
@@ -322,19 +368,43 @@ public class Home extends JFrame {
         joinGroupDialog.setVisible(true);
     }
 
+
     /**
      * Validates the group name and password for joining an existing group.
      */
     private void joinGroupInDatabase(String groupName, String groupPassword) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT * FROM groups WHERE groupname = ? AND password = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, groupName);
-            preparedStatement.setString(2, groupPassword);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            // Check if the group exists and the password is correct
+            String sqlGroup = "SELECT id FROM groups WHERE groupname = ? AND password = ?";
+            PreparedStatement groupStmt = connection.prepareStatement(sqlGroup);
+            groupStmt.setString(1, groupName);
+            groupStmt.setString(2, groupPassword);
+            ResultSet groupResult = groupStmt.executeQuery();
 
-            if (resultSet.next()) {
-                JOptionPane.showMessageDialog(this, "Successfully joined the group!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            if (groupResult.next()) {
+                int groupId = groupResult.getInt("id");
+
+                // Get the logged-in user's ID
+                String sqlUserId = "SELECT id FROM users WHERE username = ?";
+                PreparedStatement userIdStmt = connection.prepareStatement(sqlUserId);
+                userIdStmt.setString(1, User.getUsername());
+                ResultSet userIdResultSet = userIdStmt.executeQuery();
+                if (userIdResultSet.next()) {
+                    int userId = userIdResultSet.getInt("id");
+
+                    // Insert into the members table to join the group
+                    String sqlJoin = "INSERT INTO members (user_id, group_id) VALUES (?, ?)";
+                    PreparedStatement joinStmt = connection.prepareStatement(sqlJoin);
+                    joinStmt.setInt(1, userId);
+                    joinStmt.setInt(2, groupId);
+
+                    int rowsAffected = joinStmt.executeUpdate();
+                    if (rowsAffected > 0) {
+                        JOptionPane.showMessageDialog(this, "Successfully joined the group!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to join the group.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid group name or password.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -342,6 +412,7 @@ public class Home extends JFrame {
             ex.printStackTrace();
         }
     }
+
 
     /**
      * Main method to open the Home frame
