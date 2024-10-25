@@ -8,6 +8,15 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 
+
+/**
+ * The Group class represents the user interface for managing expenses within a group.
+ * It allows users to add, edit, and remove expenses in a specific group,
+ * and view the details of the group's expenses.
+ *
+ * This class handles interaction with the expenses table in the database and
+ * displays a list of expenses for the selected group.
+ */
 public class Group extends JFrame {
 
     // Database connection parameters
@@ -253,7 +262,9 @@ public class Group extends JFrame {
 
 
     /**
-     * Loads the expenses for the group from the database and displays them in the expenseTable.
+     * Loads the expenses for a specific group from the database and displays them in the expense table.
+     *
+     * @param groupId The ID of the group whose expenses should be loaded.
      */
     private void loadExpenses(int groupId) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -281,7 +292,10 @@ public class Group extends JFrame {
 
 
     /**
-     * Opens a dialog to add a new expense.
+     * Opens a dialog to allow the user to add a new expense for the group.
+     * The dialog prompts the user for the expense name, amount, gain or loss, and the date.
+     *
+     * @param groupId The ID of the group for which the expense is being added.
      */
     private void openAddExpenseDialog(int groupId) {
         JDialog addExpenseDialog = new JDialog(this, "Add Expense", true);
@@ -379,12 +393,13 @@ public class Group extends JFrame {
 
 
     /**
+     * Adds a new expense to the database for a specific group.
      *
-     * @param groupId:
-     * @param expenseName:
-     * @param amount:
-     * @param date:
-     * @param username:
+     * @param groupId The ID of the group to which the expense belongs.
+     * @param expenseName The name of the expense.
+     * @param amount The amount of the expense (positive for gains, negative for losses).
+     * @param date The date of the expense.
+     * @param username The username of the user who added the expense.
      */
     private void addExpenseToDatabase(int groupId, String expenseName, String amount, String date, String username) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -410,7 +425,13 @@ public class Group extends JFrame {
 
 
     /**
-     * Opens a dialog to edit an existing expense.
+     * Opens a dialog to edit an existing expense for the group.
+     * The dialog allows the user to modify the expense name, amount (gain or loss), and date.
+     *
+     * @param expenseId The ID of the expense to be edited.
+     * @param currentName The current name of the expense.
+     * @param currentAmount The current amount of the expense.
+     * @param currentDate The current date of the expense.
      */
     private void openEditExpenseDialog(int expenseId, String currentName, String currentAmount, String currentDate) {
         JDialog editExpenseDialog = new JDialog(this, "Edit Expense", true);
@@ -502,11 +523,12 @@ public class Group extends JFrame {
 
 
     /**
+     * Updates an existing expense in the database with new values.
      *
-     * @param expenseId:
-     * @param newName:
-     * @param newAmount:
-     * @param newDate:
+     * @param expenseId The ID of the expense to be updated.
+     * @param newName The new name of the expense.
+     * @param newAmount The new amount of the expense (positive for gains, negative for losses).
+     * @param newDate The new date of the expense.
      */
     private void updateExpenseInDatabase(int expenseId, String newName, String newAmount, String newDate) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -524,7 +546,10 @@ public class Group extends JFrame {
 
 
     /**
-     * Opens a dialog to confirm removing an expense.
+     * Opens a confirmation dialog to allow the user to remove an expense from the group.
+     * If the user confirms, the expense is removed from the database.
+     *
+     * @param expenseId The ID of the expense to be removed.
      */
     private void openRemoveExpenseDialog(int expenseId) {
         int response = JOptionPane.showConfirmDialog(
@@ -541,8 +566,9 @@ public class Group extends JFrame {
 
 
     /**
+     * Removes an expense from the database based on the expense ID.
      *
-     * @param expenseId
+     * @param expenseId The ID of the expense to be removed.
      */
     private void removeExpenseFromDatabase(int expenseId) {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -557,9 +583,10 @@ public class Group extends JFrame {
 
 
     /**
-     * Retrieve the group name from the database using the group ID.
+     * Retrieves the name of a group from the database based on the group ID.
+     *
      * @param groupID The ID of the group.
-     * @return The group name, or null if not found.
+     * @return The name of the group, or null if the group is not found.
      */
     private String getGroupNameById(int groupID) {
         String groupName = null;
