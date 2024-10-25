@@ -21,8 +21,8 @@ public class Group extends JFrame {
 
     // Database connection parameters
     private static final String DB_URL = "jdbc:mariadb://localhost:3307/homex_db";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "vj88nx35&*";
+    private static final String DB_USER = "your_username";
+    private static final String DB_PASSWORD = "your_password";
 
     // GUI components
     JPanel headerPanel, userInfoPanel, leftPanel, centerPanel;
