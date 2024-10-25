@@ -17,7 +17,7 @@ import java.io.*;
 public class LogIn extends JFrame {
 
     // Database connection parameters (base URL without the database)
-    private static final String DB_URL = "jdbc:mariadb://localhost:3307";
+    private static final String DB_URL = "jdbc:mariadb://localhost:3306";
     private static final String DB_USER = "your_username";
     private static final String DB_PASSWORD = "your_password";
 
