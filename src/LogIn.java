@@ -9,15 +9,17 @@ import java.sql.*;
 import java.io.*;
 
 /**
- * LogIn represents the user interface for logging in to the HomeEx Application.
- * It allows users to log in to their existing accounts or create new accounts if they do not have one.
+ * The LogIn class represents the user interface for logging in to the HomeEx application.
+ * Users can log in with their existing accounts or create new accounts.
+ * It provides functionality for creating the database and tables if they do not exist,
+ * validating user credentials, and navigating to the Home page after successful login.
  */
 public class LogIn extends JFrame {
 
     // Database connection parameters (base URL without the database)
-    private static final String DB_URL = "jdbc:mariadb://localhost:3307";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "vj88nx35&*";
+    private static final String DB_URL = "jdbc:mariadb://localhost:3306";
+    private static final String DB_USER = "your_username";
+    private static final String DB_PASSWORD = "your_password";
 
     // GUI components
     private JButton logInButton, signUpButton;
@@ -110,7 +112,8 @@ public class LogIn extends JFrame {
 
 
     /**
-     * Method to create the database 'homex_db' if it does not already exist.
+     * Creates the database 'homex_db' if it does not already exist.
+     * This method establishes a connection to the MariaDB server and creates the database.
      */
     private static void createDatabaseIfNotExists() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -126,7 +129,8 @@ public class LogIn extends JFrame {
 
 
     /**
-     * Method to create the 'users' table within the database if it does not already exist.
+     * Creates the 'users' table in the 'homex_db' database if it does not already exist.
+     * This table stores user information such as username, password, and avatar path.
      */
     private static void createTableIfNotExists() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -184,11 +188,13 @@ public class LogIn extends JFrame {
             }
         }
 
+
         /**
-         * Method to get the path of the avatar image
+         * Retrieves the avatar path for the given username from the database.
+         * If no avatar is set for the user, the default avatar is used.
          *
-         * @param username:
-         * @return The avatar path.
+         * @param username The username of the logged-in user.
+         * @return The path to the user's avatar image.
          */
         private String getAvatarPath(String username) {
             String avatarPath = "data/image/default_avatar.png"; // Default avatar path
@@ -217,12 +223,13 @@ public class LogIn extends JFrame {
             return avatarPath;
         }
 
+
         /**
-         * Method to validate log in by checking if the username and password exist in the database.
+         * Validates the user's login by checking the database for a matching username and password.
          *
-         * @param username: String of username.
-         * @param password: String of password.
-         * @return boolean indicating if the user exists in the database.
+         * @param username The username entered by the user.
+         * @param password The password entered by the user.
+         * @return True if the username and password are correct, false otherwise.
          */
         private boolean validateLogin(String username, String password) {
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
@@ -410,7 +417,8 @@ public class LogIn extends JFrame {
 
 
         /**
-         * Validates the password according to specified rules.
+         * Validates the password according to the specified rules:
+         * at least 8 characters long, contains at least one uppercase letter, one lowercase letter, and one digit.
          *
          * @param password The password to validate.
          * @return True if the password meets the criteria, false otherwise.
@@ -423,11 +431,13 @@ public class LogIn extends JFrame {
 
 
         /**
-         * Method to insert a new user into the database.
-         * @param username: String for the new username.
-         * @param password: String for the new password.
-         * @param avatarPath: Path to the selected avatar image.
-         * @return boolean: true if insertion was successful, false otherwise.
+         * Inserts a new user into the 'users' table in the database.
+         * The method saves the user's username, password, and avatar path.
+         *
+         * @param username The username of the new user.
+         * @param password The password of the new user.
+         * @param avatarPath The path to the user's selected avatar image.
+         * @return True if the user was successfully inserted, false otherwise.
          */
         private boolean insertUser(String username, String password, String avatarPath) {
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
