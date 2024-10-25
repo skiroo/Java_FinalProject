@@ -1,5 +1,3 @@
-# Let's create a README file based on the user's provided structure
-readme_content = """
 # HomEx - Household Expense Manager
 
 **Version**: 1.0.0  
