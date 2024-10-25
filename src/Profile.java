@@ -21,6 +21,9 @@ public class Profile extends JFrame {
     JPasswordField newPasswordField, confirmPasswordField;
     private static Image app_logo = Toolkit.getDefaultToolkit().getImage("data/image/logo.png");
 
+    /**
+     * Constructor to initialize GUI components
+     */
     public Profile() {
         // Frame setup
         setTitle("Profile");
