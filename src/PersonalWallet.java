@@ -1,13 +1,24 @@
+/**
+ * Libraries
+ */
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 
+
+/**
+ * The PersonalWallet class represents the user interface for viewing personal financial details.
+ * It shows the user's total budget, total gains, total losses, and remaining budget.
+ * Users can navigate to the Home page, Profile page, or Log out from this screen.
+ *
+ * This class retrieves and calculates financial data for the logged-in user from the database.
+ */
 public class PersonalWallet extends JFrame {
 
     // Database connection parameters
-    private static final String DB_URL = "jdbc:mariadb://localhost:3307/homex_db";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "vj88nx35&*";
+    private static final String DB_URL = "jdbc:mariadb://localhost:3306/homex_db";
+    private static final String DB_USER = "your_username";
+    private static final String DB_PASSWORD = "your_password";
 
     private String username;
     private String avatarPath;
@@ -19,6 +30,10 @@ public class PersonalWallet extends JFrame {
     JLabel pageNameLabel, appNameLabel, usernameLabel, avatarLabel, budgetLabel, totalGainsLabel, totalLossesLabel, remainingBudgetLabel;
     private static Image app_logo = Toolkit.getDefaultToolkit().getImage("data/image/logo.png");
 
+
+    /**
+     * Constructor to initialize GUI components
+     */
     public PersonalWallet() {
         this.username = User.getUsername();
         this.avatarPath = User.getAvatarPath();
@@ -147,13 +162,17 @@ public class PersonalWallet extends JFrame {
         setVisible(true);
     }
 
+
     /**
-     * Method to calculate the total gains for the user.
+     * Retrieves the total gains (positive expenses) for the logged-in user from the database.
+     *
+     * @param username The username of the logged-in user.
+     * @return The total amount of gains for the user.
      */
     private double getTotalGainsForUser(String username) {
         double totalGains = 0.0;
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT SUM(amount) FROM expenses WHERE username = ? AND amount > 0";  // Gains are positive
+            String sql = "SELECT SUM(amount) FROM expenses WHERE username = ? AND amount > 0";  // Gains are positif
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -167,8 +186,12 @@ public class PersonalWallet extends JFrame {
         return totalGains;
     }
 
+
     /**
-     * Method to calculate the total losses for the user.
+     * Retrieves the total losses (negative expenses) for the logged-in user from the database.
+     *
+     * @param username The username of the logged-in user.
+     * @return The total amount of loss for the user (as a negative value).
      */
     private double getTotalLossesForUser(String username) {
         double totalLosses = 0.0;
