@@ -20,7 +20,7 @@ import java.sql.*;
 public class Group extends JFrame {
 
     // Database connection parameters
-    private static final String DB_URL = "jdbc:mariadb://localhost:3307/homex_db";
+    private static final String DB_URL = "jdbc:mariadb://localhost:3306/homex_db";
     private static final String DB_USER = "your_username";
     private static final String DB_PASSWORD = "your_password";
 
