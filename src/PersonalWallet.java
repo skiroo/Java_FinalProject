@@ -16,7 +16,7 @@ public class PersonalWallet extends JFrame {
     // GUI components
     JPanel headerPanel, userInfoPanel, leftPanel, budgetPanel;
     JButton homeButton, personalWalletButton, profileButton, logOutButton;
-    JLabel pageNameLabel, appNameLabel, usernameLabel, avatarLabel, budgetLabel, totalExpensesLabel, remainingBudgetLabel;
+    JLabel pageNameLabel, appNameLabel, usernameLabel, avatarLabel, budgetLabel, totalGainsLabel, totalLossesLabel, remainingBudgetLabel;
     private static Image app_logo = Toolkit.getDefaultToolkit().getImage("data/image/logo.png");
 
     public PersonalWallet() {
@@ -110,7 +110,7 @@ public class PersonalWallet extends JFrame {
         add(leftPanel, BorderLayout.WEST); // Add the left panel to the profile page
 
         // Create the budget panel to display budget details
-        budgetPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        budgetPanel = new JPanel(new GridLayout(4, 1, 10, 10));
         budgetPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Add padding around the panel
 
         // Total budget label
@@ -118,16 +118,24 @@ public class PersonalWallet extends JFrame {
         budgetLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         budgetPanel.add(budgetLabel);
 
-        // Calculate total expenses
-        double totalExpenses = getTotalExpensesForUser(username);
+        // Calculate total gains and losses
+        double totalGains = getTotalGainsForUser(username);
+        double totalLosses = getTotalLossesForUser(username);
 
-        // Total expenses label
-        totalExpensesLabel = new JLabel("Total Expenses: $" + totalExpenses);
-        totalExpensesLabel.setFont(new Font("Arial", Font.PLAIN, 18));
-        budgetPanel.add(totalExpensesLabel);
+        // Total gains label
+        totalGainsLabel = new JLabel("Total Gains: $" + totalGains);
+        totalGainsLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        totalGainsLabel.setForeground(Color.GREEN);
+        budgetPanel.add(totalGainsLabel);
+
+        // Total losses label
+        totalLossesLabel = new JLabel("Total Losses: $" + Math.abs(totalLosses));  // Absolute value to show positive number for losses
+        totalLossesLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        totalLossesLabel.setForeground(Color.RED);
+        budgetPanel.add(totalLossesLabel);
 
         // Remaining budget label
-        double remainingBudget = userBudget - totalExpenses;
+        double remainingBudget = userBudget + totalGains + totalLosses;  // Gains increase the budget, losses decrease the budget (negative)
         remainingBudgetLabel = new JLabel("Remaining Budget: $" + remainingBudget);
         remainingBudgetLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         budgetPanel.add(remainingBudgetLabel);
@@ -140,27 +148,47 @@ public class PersonalWallet extends JFrame {
     }
 
     /**
-     * Method to calculate the total expenses for the user from the database.
+     * Method to calculate the total gains for the user.
      */
-    private double getTotalExpensesForUser(String username) {
-        double totalExpenses = 0.0;
+    private double getTotalGainsForUser(String username) {
+        double totalGains = 0.0;
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT SUM(amount) FROM expenses WHERE username = ?";
+            String sql = "SELECT SUM(amount) FROM expenses WHERE username = ? AND amount > 0";  // Gains are positive
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                totalExpenses = resultSet.getDouble(1); // Get the sum of expenses
+                totalGains = resultSet.getDouble(1);  // Sum of gains
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-        return totalExpenses;
+        return totalGains;
     }
 
     /**
-     * Main Method to open the profile page.
+     * Method to calculate the total losses for the user.
+     */
+    private double getTotalLossesForUser(String username) {
+        double totalLosses = 0.0;
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "SELECT SUM(amount) FROM expenses WHERE username = ? AND amount < 0";  // Losses are negative
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                totalLosses = resultSet.getDouble(1);  // Sum of losses
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return totalLosses;
+    }
+
+    /**
+     * Main Method to open the Personal Wallet page.
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new PersonalWallet());
